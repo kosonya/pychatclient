@@ -6,6 +6,7 @@ import os
 import gobject
 import nettools
 import Queue
+import mytypes
 
 class MessageArea(gtk.ScrolledWindow):
     def __init__(self, editable=False):
@@ -44,6 +45,9 @@ class MainWindow(gtk.Window):
         self.set_title(u"Наш крутой чат")
         self.mainbox = gtk.VBox()
         self.add(self.mainbox)
+        
+        self.ip_port = ""
+        self.nick = ""
         
         self.chat_area = MessageArea(editable = False)
         self.mainbox.pack_start(self.chat_area)
@@ -89,7 +93,7 @@ class MainWindow(gtk.Window):
             
         
     def on_settings_button_clicked(self, widget):
-        settings_dialog = simpledialog.SettingsDialog()
+        settings_dialog = simpledialog.SettingsDialog(self.ip_port, self.nick)
         response = settings_dialog.run()
         if response == gtk.RESPONSE_OK:
             self.ip_port = settings_dialog.get_ip_port()
@@ -106,7 +110,11 @@ class MainWindow(gtk.Window):
     def on_send_button_clicked(self, widget):
         message = self.input_area.get_text()
         self.input_area.set_text("")
-        self.queue.put(message)
+        message = self.nick + "> " + message
+        msg = mytypes.Message()
+        msg.type = "text"
+        msg.content = message
+        self.queue.put(msg)
 
     def connect_to_server(self):
         self.queue = Queue.Queue()

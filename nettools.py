@@ -3,6 +3,7 @@
 import threading
 import gobject
 import socket
+import mytypes
 
 class Connecter(threading.Thread):
     def __init__(self, ip_port, chat_area, queue):
@@ -23,10 +24,15 @@ class Connecter(threading.Thread):
                 s.connect( (self.ip, self.port) )
                 gobject.idle_add(self.info_print, "Connected to " + self.ip + ":"
                              + str(self.port))
+                waiter = Waiter(self.chat_area, s, self.queue)
+                waiter.start()
                 while True:
                     message = self.queue.get()
-                    s.send(message)
-                    self.queue.task_done()
+                    if message.type == "text":
+                        s.send(message.content)
+                        self.queue.task_done()
+                    elif message.type == "command" and message.content == "disconnect":
+                        break
                 s.close()    
             except Exception as e:
                 gobject.idle_add(self.info_print, "Error: " + str(e))
@@ -38,3 +44,28 @@ class Connecter(threading.Thread):
         self.chat_area.add_text(text)
         return False
     
+    
+class Waiter(threading.Thread):
+    def __init__(self, chat_area, s, queue):
+        threading.Thread.__init__(self)
+        self.s = s
+        self.chat_area = chat_area
+        self.q = queue
+
+    def info_print(self, text):
+        self.chat_area.add_text(text)
+        return False
+        
+    def run(self):
+        while True:
+            message = self.s.recv(1024)
+            if not message:
+                break
+            gobject.idle_add(self.info_print, message)
+        msg = mytypes.Message()
+        msg.type = "command"
+        msg.content = "disconnect"
+        self.q.put(msg)
+        gobject.idle_add(self.info_print, "Disconnected")
+        
+        
