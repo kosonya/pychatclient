@@ -4,44 +4,51 @@ import gtk
 
 #label = gtk.Label("Nice label")
 
-
-dialog = gtk.Dialog(u"Настройки",
+class SettingsDialog(gtk.Dialog):
+    def __init__(self, ip_port = "", nick = ""):
+        gtk.Dialog.__init__(self, u"Настройки",
                    None,
                    gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT,
-                   (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
-                    gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+                   (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                    gtk.STOCK_OK, gtk.RESPONSE_OK))
 
-ip_port_label = gtk.Label(u"IP:порт сервера")
-ip_port_entry = gtk.Entry()
-nick_label = gtk.Label(u"Ник в чате")
-nick_entry = gtk.Entry()
-
-labels_box = gtk.VBox()
-labels_box.pack_start(ip_port_label)
-labels_box.pack_start(nick_label)
-
-entry_box = gtk.VBox()
-entry_box.pack_start(ip_port_entry)
-entry_box.pack_start(nick_entry)
-
-main_hbox = gtk.HBox()
-main_hbox.pack_start(labels_box)
-main_hbox.pack_start(entry_box)
-
-dialog.vbox.pack_start(main_hbox)
-
-#ip_port_hbox = gtk.HBox()
-#ip_port_hbox.pack_start(ip_port_label)
-#ip_port_hbox.pack_start(ip_port_entry)
-
-#nick_hbox = gtk.HBox()
-#nick_hbox.pack_start(nick_label)
-#nick_hbox.pack_start(nick_entry)
-
-#dialog.vbox.pack_start(ip_port_hbox)
-#dialog.vbox.pack_start(nick_hbox)
-
-
-dialog.show_all()
-response = dialog.run()
-dialog.destroy()
+        self.ip_port_label = gtk.Label(u"IP:порт сервера")
+        self.ip_port_entry = gtk.Entry()
+        self.ip_port_entry.set_text(ip_port)
+        self.nick_label = gtk.Label(u"Ник в чате")
+        self.nick_entry = gtk.Entry()
+        self.nick_entry.set_text(nick)
+        
+        self.labels_box = gtk.VBox()
+        self.labels_box.pack_start(self.ip_port_label)
+        self.labels_box.pack_start(self.nick_label)
+        
+        self.entry_box = gtk.VBox()
+        self.entry_box.pack_start(self.ip_port_entry)
+        self.entry_box.pack_start(self.nick_entry)
+        
+        self.main_hbox = gtk.HBox()
+        self.main_hbox.pack_start(self.labels_box)
+        self.main_hbox.pack_start(self.entry_box)
+        
+        self.vbox.pack_start(self.main_hbox)
+        
+        self.show_all()
+        
+    def get_ip_port(self):
+        return self.ip_port_entry.get_text()
+    
+    def get_nick(self):
+        return self.nick_entry.get_text()
+    
+def main():
+    dialog = SettingsDialog("8.8.8.8:31415", "etomoynick")
+    response = dialog.run()
+    print response
+    if response == gtk.RESPONSE_OK:
+        print dialog.get_ip_port()
+        print dialog.get_nick()
+    dialog.destroy()
+    
+if __name__ == "__main__":
+    main() 
