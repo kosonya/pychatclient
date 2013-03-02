@@ -5,10 +5,11 @@ import gobject
 import socket
 
 class Connecter(threading.Thread):
-    def __init__(self, ip_port, chat_area):
+    def __init__(self, ip_port, chat_area, queue):
         threading.Thread.__init__(self)
         self.chat_area = chat_area
         self.ip_port = ip_port
+        self.queue = queue
             
     def run(self):
         #FIXME Не прекращает попытки содениения с сервером при измерении настроек.
@@ -22,6 +23,10 @@ class Connecter(threading.Thread):
                 s.connect( (self.ip, self.port) )
                 gobject.idle_add(self.info_print, "Connected to " + self.ip + ":"
                              + str(self.port))
+                while True:
+                    message = self.queue.get()
+                    s.send(message)
+                    self.queue.task_done()
                 s.close()    
             except Exception as e:
                 gobject.idle_add(self.info_print, "Error: " + str(e))

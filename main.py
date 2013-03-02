@@ -5,6 +5,7 @@ import simpledialog
 import os
 import gobject
 import nettools
+import Queue
 
 class MessageArea(gtk.ScrolledWindow):
     def __init__(self, editable=False):
@@ -29,7 +30,8 @@ class MessageArea(gtk.ScrolledWindow):
         self.textbuffer.set_text(text)
         
     def get_text(self):
-        return self.textbuffer.get_text()
+        start, end = self.textbuffer.get_bounds()
+        return self.textbuffer.get_text(start, end)
     
     def add_text(self, text):
         self.text += '\n' + text
@@ -57,6 +59,7 @@ class MainWindow(gtk.Window):
   
         self.send_button = gtk.Button(u"Отправить")
         self.buttons_box.pack_start(self.send_button, padding = 10, fill = False)
+        self.send_button.connect("clicked", self.on_send_button_clicked)
 
         self.mainbox.pack_start(self.buttons_box, padding = 10, fill = False)
 
@@ -97,12 +100,17 @@ class MainWindow(gtk.Window):
             f.write(self.ip_port + '\n')
             f.write(self.nick + '\n')
             f.close()
-            self.connect_to_server()
-            
+            self.connect_to_server()          
         settings_dialog.destroy()
 
+    def on_send_button_clicked(self, widget):
+        message = self.input_area.get_text()
+        self.input_area.set_text("")
+        self.queue.put(message)
+
     def connect_to_server(self):
-        connecter = nettools.Connecter(self.ip_port, self.chat_area)
+        self.queue = Queue.Queue()
+        connecter = nettools.Connecter(self.ip_port, self.chat_area, self.queue)
         connecter.start()
 
 def main():
